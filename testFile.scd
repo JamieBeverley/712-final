@@ -27,37 +27,6 @@ Synth.new(\out);
 );
 
 )
-min(2,3)
-(
-~pop=List();
-~scale = [0,3,5,7,8,10,12,15,17,19,20,22,24];
-
-4.do{
-	var s=List.new;
-	s.add(48+~scale.choose);
-	8.do{
-		if(2.rand==1,{s.add(48+~scale.choose)});
-	};
-
-	~pop.add(Individual(10.rand/10,value:Melody(s,[0.5,0.125,0.25,1,2].select({2.rand==1}).scramble,[\bell])));
-};
-~g = Genetic(replacementSize:2,population:~pop,fitnessF:{|a|10.rand/10;},mutateFunction:{},breedFunc:{|a| a.postln;a.value});
-)
-
-
-
-~g.history.choose.fitnessVariance
-
-
-~g.history.do({|i| i.scores.postln;});
-
-Dictionary
-
-Jam.loadSynths
-s
-|Melody, avgFitness, times played|
-
-
 
 
 
@@ -132,7 +101,7 @@ Routine {
 
 		~pop.add(Individual(10.rand/10,value:Melody(s,[0.5,0.125,0.25,1,2].select({2.rand==1}).scramble,[\bell])));
 	};
-	~g = Genetic(replacementSize:2,population:~pop,fitnessF:fitnessFunc,mutateFunction:{},breedFunc:breedFunc,scale:~scale,maxMelodyLength:8);
+	~g = Genetic(replacementSize:3,population:~pop,fitnessF:fitnessFunc,mutateFunction:{},breedFunc:breedFunc,scale:~scale,maxMelodyLength:8);
 
 	inf.do{
 		// var = Genetic.wChooseN(~g.population,1)[0];
@@ -157,69 +126,24 @@ Routine {
 }.play
 )// end /////////////////////////////////////
 
-Server.default.options.sampleRate=44100
 
-
-~g.replacementSize
-\asdf
-~g.showPopulation
-~d
-Synth(\out)
 (
 Routine(
 	{
-		10.do{
+		100.do{
 			~answer=110.rand/110;
 			~c.test=true;
 			~c.signal;
-			~d=~d+1;
+			0.01.wait;
 		}
-	}).play;
+}).play;
 )
-~g.scale = [ 60, 62, 64, 65, 67, 69, 71 ,72, 74, 76, 77, 79, 81, 83 ]-12
-
-[ 60, 62, 64, 65, 67, 69, 71 ]+12
-
-~g.history.size.postln;
-~g.history.keys.postln;
-size
-
-~v=0
-~g.history.collect({|v,i|v.scores}).do({|i|~v=~v+i.size});
-~v
-~g.history("asdf")
-
-x
-
-Server.default.record("/Users/JamieBeverley/2017-2018/712-New-Media/Final/earlySuccess1.aiff")
-
-Server.default.stopRecording
-
-Jam.soundTest
-
-SuperDirt.start
-
-
-~g.lastSelected
+~g.generations
 
 (
-a=[1,2,3,4,5];
-b=[1,2,3];
-
-a.collect({|v,i| [v,b[i%(b.size)]].wchoose([0.7,0.5].normalizeSum)});
-
+~answer=0.9;
+~c.test=true;
+~c.signal;
 )
 
-~g.scale = [60,62,64,67,69,71,72]
-
-//Convergence onto a set of identical melodies is too easy right now - no mutation, small population, etc..
-
-a = List.new
-
-a
-
-a.add(4)
-
-~g
-
-~g.history
+~g.showPopulation
