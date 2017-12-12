@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>Face tracker</title>
+		<meta charset="utf-8">
+		<link href="./styles/bootstrap.min.css" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="style.css">
+
+		<script>
+			// getUserMedia only works over https in Chrome 47+, so we redirect to https. Also notify user if running from file.
+			// if (window.location.protocol == "file:") {
+			// 	alert("You seem to be running this example directly from a file. Note that these examples only work when served from a server or localhost due to canvas cross-domain restrictions.");
+			//  }// else if (window.location.hostname !== "localhost" && window.location.protocol !== "https:"){
+			// 	window.location.protocol = "https";
+			// }
+		</script>
+		<script type="text/javascript">
+
+			// var _gaq = _gaq || [];
+			// _gaq.push(['_setAccount', 'UA-32642923-1']);
+			// _gaq.push(['_trackPageview']);
+
+			// (function() {
+			// 	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			// 	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			// 	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+			// })();
+
+		</script>
+	</head>
+	<body>
+		<script src="examples/js/libs/utils.js"></script>
+		<script src="./build/clmtrackr.js"></script>
+		<script src="./models/model_pca_20_svm.js"></script>
+		<script src="examples/js/libs/Stats.js"></script>
+		<script src="examples/js/libs/d3.min.js"></script>
+		<script src="examples/js/emotion_classifier.js"></script>
+		<script src="examples/js/emotionmodel.js"></script>
+		<div id="content">
+			
+			<div style="display:table;width:400px"><p id="say" class="say">..................</p></div>
+
+			<div id="controls">
+				<input class="btn" type="button" value="wait, loading video" disabled="disabled" onclick="startVideo()" id="startbutton"></input>
+			</div>
+			
+			<div id="container" >
+				<video id="videoel" width="200" height="150" preload="auto" loop playsinline autoplay>
+				</video>
+
+				<canvas id="overlay" width="200" height="150"></canvas>
+			</div>
+			<div id="ratingIndicator">0%</div>
+			<div id="emotion_container" hidden>
+				<div id="emotion_icons">
+					<img class="emotion_icon" id="icon1" src="./media/icon_angry.png">
+					<img class="emotion_icon" id="icon2" src="./media/icon_sad.png">
+					<img class="emotion_icon" id="icon3" src="./media/icon_surprised.png">
+					<img class="emotion_icon" id="icon4" src="./media/icon_happy.png">
+				</div>
+				<div id='emotion_chart'></div>
+			</div>
+			</div>
+			<script src="./client.js"></script>
+		</div>
+	</body>
+</html>
