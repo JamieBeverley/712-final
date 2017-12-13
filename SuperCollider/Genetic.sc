@@ -7,7 +7,7 @@ Genetic {
 	var <>breedFunc; // a func taking: [[fitness (0-1), individual]], returning a population ([individual])
 	var <>lastSelected;
 	var <>memory;    // a dictionary of all previous played melodies, where the key is the string representation of the notes (using durations too would create too many 'memories' - the algorithm would have to run very long to ever recall anything specific about it's memeory.
-	var <>history;   // a List of the past individuals played. Useful for seeing if something has been played recently
+	var <>history;   // a List of the past 20 individuals played. Useful for seeing if something has been played recently
 	var <>scale;
 	var <>maxMelodyLength; //length in the 'notes' list
 	var <>minMelodyLength; //length in the 'notes' list
@@ -247,6 +247,12 @@ Genetic {
 		this.node.sendMsg("/say",a);
 	}
 
+	//Expecting 'a' to be a melody
+	sayMelody{
+		|a|
+		this.node.sendMsg("/sayMelody",a.showNotes());
+	}
+
 	startStandby{
 
 		Pdef(\___genetic_Pattern).stop;
@@ -257,12 +263,16 @@ Genetic {
 			4.wait;
 			while({this.inStandby},{
 				var mel = Genetic.wChooseN(this.population,1)[0].value;
-				var waitTime;
-				Pbind(\instrument,\bell,\midinote,Pseq(mel.notes,1),\dur,Pseq(mel.durations,1)).play;
-				if(mel.durations.size> mel.notes.size,{
-					waitTime = mel.durations.sum.wait;
+				var waitTime=0;
+				("__ playing: "+mel).postln;
+				this.sayMelody(mel);
+				if(mel.durations.size>=mel.notes.size,{
+					waitTime = mel.durations.sum;
+					Pbind(\instrument,\bell,\midinote,Pseq(mel.notes,inf),\dur,Pseq(mel.durations,1)).play;
 				},{
-					waitTime = (mel.durations!((mel.notes.size/mel.durations.size).floor+1)).flatten.sum;
+					// waitTime = (mel.durations!((mel.notes.size/mel.durations.size).floor+1)).flatten.sum;
+					mel.notes.do({|v,i|waitTime=waitTime+mel.durations[i%mel.durations.size]});
+					Pbind(\instrument,\bell,\midinote,Pseq(mel.notes,1),\dur,Pseq(mel.durations,inf)).play;
 				});
 				waitTime.wait;
 			});
@@ -294,6 +304,7 @@ Genetic {
 		index = this.population.collect({|v,i|v}).indexOf(a);
 
 		Pdef(\___genetic_Pattern,a.value.pattern).play;
+		this.sayMelody(a.value);
 		f = this.fitnessFunc.value(a.value);
 
 		// If the fitness func returns a rating indicating no rating (nil) then set standbyMode on
@@ -301,6 +312,7 @@ Genetic {
 		if( f==nil,{
 			this.inStandby=true;
 		},{
+
 			f = (f*0.5)+(this.aiFitnessFunc(a.value,f)*0.5);
 			Pdef(\___genetic_Pattern).stop;
 			this.population[index].fitness=f;
@@ -311,9 +323,9 @@ Genetic {
 	aiFitnessFunc {
 		|melody, audienceRating|
 		var frequencyComponent;
-		var audienceComponent;
+		var variance;
 		var pastRatingComponent;
-		var rating;
+		var rating = 0;
 		var memory = this.memory.at(melody.hash); // shouldn't have to error check here, if the melody has made it in here, it should exist in the dictionary already...
 		var recentFrequency=0;
 		var longFrequency;
@@ -325,25 +337,64 @@ Genetic {
 		});
 		recentFrequency = recentFrequency/this.history.size;
 
+
 		longFrequency = memory.count/this.generations;
 
+		("(((((((((((((((((((    long freq: "+longFrequency).postln;
+		(")))))))))))))))))))    short freq: "+recentFrequency).postln;
 		// try a 20%/80% split
-		frequencyComponent = 0.2*longFrequency+(0.8*recentFrequency);
+		frequencyComponent = 1-(0.2*longFrequency+(0.8*recentFrequency));
 
 
+		case
+		{frequencyComponent>0.75} {this.say(["Wow I don't know if I've ever heard this before!","This melody is unique!"].choose)}
+		{frequencyComponent>0.5} {this.say(["This one is pretty new...","Hmm, this is pretty unique..."].choose)}
+		{frequencyComponent>0.25} {this.say(["This melody has been played a lot, I'm kind of tired of it...","I'm kind of getting tired of this one..."].choose)}
+		{frequencyComponent>=0} {this.say(["Ahh this melody is overplayed...","I've heard this melody too much!"].choose)};
+
+		6.wait;
 		// Past average -
 		pastRatingComponent = memory.fitnessAverage;
+
+		case {pastRatingComponent>0.75} {this.say(["Everyone before has loved this one!","This has been a popular one in the past!"].choose)}
+		{pastRatingComponent>0.5} {this.say(["I seem to remember people tend to like this melody...","People tend to like this one..."].choose)}
+		{pastRatingComponent>0.25} {this.say(["If I remember correctly this one hasn't been very popular...","I don't think people usually like this one very much..."].choose)}
+		{pastRatingComponent>=0} {this.say(["Most people really dislike this melody...","This one has never been a crowd pleaser..."].choose)};
+
+		6.wait;
+
+
+		this.say("You thought this melody was about:"+(audienceRating*10)+"/ 10");
+		5.wait;
 
 		// Audience compoennt - if there has been a historically indecisive crowd on this melody, don't give the
 		// Audience much weight...
 		// Variance of past ratings - indecisive->don't factor in audience decision too much.
-		audienceComponent = (1-memory.fitnessVariance)*audienceRating;
+		variance = memory.fitnessVariance;
+		case
+		{variance>0.75} {this.say(["But hardly anyone agrees on this one, I'm not really going to take that into consideration..."].choose)};
+		{variance>0.5} {this.say(["But people have been pretty indecisive on this, I'm not going to take that too seriously..."].choose)}
+		{variance>0.25} {this.say(["And past audiences have tended to agreed on this..."].choose)}
+		{variance>=0} {this.say(["And past audiences have been very decisive about this melody..."].choose)}
+		6.wait;
 
-		rating = [audienceComponent,frequencyComponent,pastRatingComponent].mean;
+		this.say(["hmmm","*thinking*"].choose);
+		3.wait;
 
-		("audienceComponent:   " +audienceComponent).postln;
+
+		//frequency: both long and short history,  pastRating: previous opinion, audienceRating: weighted by variance of past
+		rating = ([1/3,1/3,variance.sqrt/3].normalizeSum*[frequencyComponent, pastRatingComponent, audienceRating]).sum;
+		// rating = [frequencyComponent,audienceComponent,pastRatingComponent].mean;
+
+
+		this.say("Based on all that my overall impression of this melody is:"+(rating*10)+"/ 10!");
+		Pdef(\___genetic_Pattern).stop;
+
+		5.wait;
+		("audienceComponent:   " +audienceRating).postln;
 		("frequencyComponent:   " +frequencyComponent).postln;
 		("pastRatingComponent:   " +pastRatingComponent).postln;
+		("morrre"+([1/3,1/3,variance.sqrt/3].normalizeSum*[frequencyComponent, pastRatingComponent, audienceRating])).postln;
 		(">>>>>>>>>>> FINAL RATING:    "+rating).postln;
 
 		// Routine{
@@ -354,14 +405,14 @@ Genetic {
 		//
 		// 	6.wait;
 		//
-
-		case {frequencyComponent>0.75} {this.say("This one hasn't even really been played before!")}
-
-		{frequencyComponent>0.5} {this.say("This one is pretty unique!")}
-
-		{frequencyComponent>0.25} {this.say("Hmmm this one has been repeated a few times though I'm kind of tired of it.")}
-
-		{frequencyComponent>0} {this.say("I've heard this one way too much!")};
+		//
+		// case {frequencyComponent>0.75} {this.say("This one hasn't even really been played before!")}
+		//
+		// {frequencyComponent>0.5} {this.say("This one is pretty unique!")}
+		//
+		// {frequencyComponent>0.25} {this.say("Hmmm this one has been repeated a few times though I'm kind of tired of it.")}
+		//
+		// {frequencyComponent>0} {this.say("I've heard this one way too much!")};
 
 
 		// 	2.wait;

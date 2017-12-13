@@ -46,6 +46,7 @@ fitnessFunc= {|a|
 	~g.node.sendMsg("/getRating");
 	~c.hang;
 	("You thought it was: "+~answer).postln;
+
 	~answer;
 };
 
@@ -123,11 +124,19 @@ OSCdef(\awaken,{
 	|msg|
 	"awaken received".postln;
 	"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ stop ~g's generative music".postln;
-
-	~g.inStandby = false;
-	~g.standbyCondition.test=true;
-	~g.standbyCondition.signal;
-
+	Routine({
+		~g.say("Ahh someone is here!");
+		4.wait;
+		~g.say("I'm trying to compose a perfect melody - can you help me?");
+		5.wait;
+		~g.say("I'm going to play a melody to you and I'll guage how you feel about it!");
+		5.wait;
+		~g.say("lets start!");
+		3.wait;
+		~g.inStandby = false;
+		~g.standbyCondition.test=true;
+		~g.standbyCondition.signal;
+	}).play;
 	//... resume
 
 },"/awaken",recvPort:9001);
@@ -138,8 +147,3 @@ OSCdef(\awaken,{
 )// end /////////////////////////////////////
 
 
-(
-~answer=0.9;
-~c.test=true;
-~c.signal;
-)

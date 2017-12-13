@@ -6,14 +6,14 @@ var	ws = new WebSocket("ws://"+location.hostname+":"+location.port, 'echo-protoc
 
 var ratings = []
 
-var waitTime=20000; // time bot takes to judge approval
+var waitTime=15000; // time bot takes to judge approval
 var ratingsPerPeriod = 80; // number of 'samples' of happiness taken in that time
 
 
 function sendRating (){
 	// If enough ratings were read in the past waitTime, then send the rating
 	// otherwise send a 'noRating' message
-	if(ratings.length>(0.5*ratingsPerPeriod)){
+	if(ratings.length>(0.1*ratingsPerPeriod)){
 		var rating = mean(ratings);	
 		console.log("ratings sampled:  " +ratings)
 		console.log("mean of said ratings: "+rating)
@@ -66,14 +66,19 @@ ws.addEventListener('message', function(message){
 	
 		// After 'waitTime' - kill the 'getRating' timeout and send the rating to server.
 		setTimeout(sendRating,waitTime);
-		setTimeout(function(){clearInterval(getRatingInterval)}, waitTime)
+		setTimeout(function(){
+			clearInterval(getRatingInterval)
+			document.getElementById("ratingIndicator").innerHTML="";
+		}, waitTime)
 	} else if(msg.type =="standby"){
 		console.log("standby");
 		standby()
 		
 	} else if(msg.type == "say"){
 		say(msg.value);
-	} else {
+	} else if (msg.type == "sayMelody"){
+		sayMelody(msg.value);
+	}else {
 		console.log("##### Warning - unidentified message from server: "+msg.type)
 	}
 
@@ -81,6 +86,11 @@ ws.addEventListener('message', function(message){
 
 function say(s){
 	var textArea = document.getElementById("say");
+	textArea.innerHTML = s;
+}
+
+function sayMelody(s){
+	var textArea = document.getElementById("sayMelody");
 	textArea.innerHTML = s;
 }
 
@@ -114,7 +124,7 @@ var overlayCC = overlay.getContext('2d');
 /********** check and set up video/webcam **********/
 
 function enablestart() {
-	var startbutton = document.getElementById('startbutton');
+	var startbutton = document.getElementById('startButton');
 	startbutton.value = "start";
 	startbutton.disabled = null;
 }
@@ -183,6 +193,7 @@ function startVideo() {
 	// start tracking
 	ctrack.start(vid);
 	trackingStarted = true;
+	document.getElementById("startButton").remove();
 	// start loop to draw face
 	drawLoop();
 }

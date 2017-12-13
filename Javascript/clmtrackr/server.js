@@ -62,7 +62,9 @@ scOSC.on('message',function(oscMsg){
 
 	} else if (oscMsg.address == "/say"){
 		broadcast({type:"say",value:oscMsg.args[0]})
-	} else{
+	} else if (oscMsg.address == "/sayMelody"){
+		broadcast({type:"sayMelody",value:oscMsg.args[0]})
+	}else{
 		console.log("######## WARNING - Received osc from SC with no matching address")
 	}
 })
