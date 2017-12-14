@@ -304,7 +304,11 @@ Genetic {
 		index = this.population.collect({|v,i|v}).indexOf(a);
 
 		Pdef(\___genetic_Pattern,a.value.pattern).play;
+		this.say(["How do you feel about this melody?","How's this melody?","What about this melody?"].choose);
+		5.wait;
+		this.say("(smile for approval - frown for disapproval!)");
 		this.sayMelody(a.value);
+		3.wait;
 		f = this.fitnessFunc.value(a.value);
 
 		// If the fitness func returns a rating indicating no rating (nil) then set standbyMode on
@@ -329,7 +333,7 @@ Genetic {
 		var memory = this.memory.at(melody.hash); // shouldn't have to error check here, if the melody has made it in here, it should exist in the dictionary already...
 		var recentFrequency=0;
 		var longFrequency;
-
+		var string;
 		// Frequency played - if it's been played a lot downvote
 		// how should long frequency be weighted against short history?
 		this.history.do({|i|
@@ -371,19 +375,25 @@ Genetic {
 		// Audience much weight...
 		// Variance of past ratings - indecisive->don't factor in audience decision too much.
 		variance = memory.fitnessVariance;
-		case
-		{variance>0.75} {this.say(["But hardly anyone agrees on this one, I'm not really going to take that into consideration..."].choose)};
+		case {variance>0.75} {this.say(["But hardly anyone agrees on this one, I'm not really going to take that into consideration..."].choose)}
 		{variance>0.5} {this.say(["But people have been pretty indecisive on this, I'm not going to take that too seriously..."].choose)}
 		{variance>0.25} {this.say(["And past audiences have tended to agreed on this..."].choose)}
-		{variance>=0} {this.say(["And past audiences have been very decisive about this melody..."].choose)}
+		{variance>=0} {this.say(["And past audiences have been very decisive about this melody..."].choose)};
 		6.wait;
 
-		this.say(["hmmm","*thinking*"].choose);
-		3.wait;
+
+		string = ["hmmm","*thinking*"].choose;
+		4.do{
+			|i|
+			var s="";
+			i.do{s=s++".";};//uhg
+			this.say(string++s);
+			1.wait;
+		};
 
 
 		//frequency: both long and short history,  pastRating: previous opinion, audienceRating: weighted by variance of past
-		rating = ([1/3,1/3,variance.sqrt/3].normalizeSum*[frequencyComponent, pastRatingComponent, audienceRating]).sum;
+		rating = ([1/3,1/3,(1-(variance*variance))/3].normalizeSum*[frequencyComponent, pastRatingComponent, audienceRating]).sum;
 		// rating = [frequencyComponent,audienceComponent,pastRatingComponent].mean;
 
 
@@ -394,7 +404,7 @@ Genetic {
 		("audienceComponent:   " +audienceRating).postln;
 		("frequencyComponent:   " +frequencyComponent).postln;
 		("pastRatingComponent:   " +pastRatingComponent).postln;
-		("morrre"+([1/3,1/3,variance.sqrt/3].normalizeSum*[frequencyComponent, pastRatingComponent, audienceRating])).postln;
+		("morrre"+([1/3,1/3,(1-(variance*variance))/3].normalizeSum*[frequencyComponent, pastRatingComponent, audienceRating])).postln;
 		(">>>>>>>>>>> FINAL RATING:    "+rating).postln;
 
 		// Routine{

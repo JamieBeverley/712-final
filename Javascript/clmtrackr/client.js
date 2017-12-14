@@ -5,7 +5,7 @@ var	ws = new WebSocket("ws://"+location.hostname+":"+location.port, 'echo-protoc
 }
 
 var ratings = []
-
+var inStandby=false;
 var waitTime=15000; // time bot takes to judge approval
 var ratingsPerPeriod = 80; // number of 'samples' of happiness taken in that time
 
@@ -42,6 +42,18 @@ function sendRating (){
 	ratings = [];
 }
 
+function showVideo(){
+	var e = document.getElementById("checkbox").checked
+	var container=document.getElementById("container")
+	console.log(e)
+	if(e){
+		container.hidden = false;
+	} else {
+		container.hidden = true;
+	}
+
+}
+
 function getRating(){
 	var params = ctrack.getCurrentParameters();
 	var emotions = ec.meanPredict(params)
@@ -49,9 +61,13 @@ function getRating(){
 	// Only if the faceTracker is working/has registered a face
 	if(ctrack.getCurrentPosition()){
 		ratings.push(emotions[3].value);
-		x.innerHTML = emotions[3].value+"%";
+		if(inStandby==false){
+			x.innerHTML = (Math.round(emotions[3].value*100)/10)+" / 10";
+		}
 	} else{
+		if(inStandby==false){
 		x.innerHTML = "I can't tell how you feel about this one...";
+	}
 	}
 	
 }
@@ -95,6 +111,8 @@ function sayMelody(s){
 }
 
 function standby(){
+	inStandby=true;
+	document.getElementById("ratingIndicator").innerHTML="";
 	ratings =[];
 	var standbyInterval = setInterval(getRating,waitTime/ratingsPerPeriod)
 	console.log("entered standby")
@@ -193,7 +211,8 @@ function startVideo() {
 	// start tracking
 	ctrack.start(vid);
 	trackingStarted = true;
-	document.getElementById("startButton").remove();
+	document.getElementById("controls").remove();
+	document.getElementById("sayMelodyContainer").hidden=false;
 	// start loop to draw face
 	drawLoop();
 }

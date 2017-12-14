@@ -32,7 +32,7 @@ Synth.new(\out);
 
 
 // Start//////////////////////////////////////////////////
-(
+(;
 var history = Dictionary.new();
 var fitnessFunc;
 var breedFunc;

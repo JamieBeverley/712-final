@@ -27,7 +27,6 @@ SynthDef(\out,{
 
 
 
-
 // Start//////////////////////////////////////////////////
 (
 var history = Dictionary.new();
@@ -42,7 +41,7 @@ fitnessFunc= {|a|
 	"----Playing:".postln;
 	("     "+a).postln;
 	"How was it? (store answer in ~answer)".postln;
-	~g.say(["How do you feel about this one?","How's this melody?","What about this melody?"].choose);
+	~g.say("I think this is how you feel about this melody: ");
 	~g.node.sendMsg("/getRating");
 	~c.hang;
 	("You thought it was: "+~answer).postln;
@@ -127,7 +126,7 @@ OSCdef(\awaken,{
 	Routine({
 		~g.say("Ahh someone is here!");
 		4.wait;
-		~g.say("I'm trying to compose a perfect melody - can you help me?");
+		~g.say("I'm trying to compose the perfect melody - can you help me?");
 		5.wait;
 		~g.say("I'm going to play a melody to you and I'll guage how you feel about it!");
 		5.wait;
